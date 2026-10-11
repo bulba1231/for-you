@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Вопросик</title>
+    <style>
+        body { background-color: #ffffff; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; font-family: sans-serif; position: relative; }
+        .box { text-align: center; width: 100%; z-index: 10; display: flex; flex-direction: column; align-items: center; }
+        
+        /* Розовый текст вопроса */
+        h1 { color: #ff66b2; font-size: 26px; margin-bottom: 40px; font-weight: normal; }
+        
+        /* Контейнер для кнопок */
+        .btn-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; min-height: 120px; width: 100%; }
+        
+        /* Розовый стиль кнопок */
+        .btn { padding: 10px 25px; font-size: 18px; border: 1px solid #ff66b2; border-radius: 4px; cursor: pointer; background: #ffffff; color: #ff66b2; -webkit-tap-highlight-color: transparent; }
+        
+        /* Кнопка "Да" изначально скрыта совсем. Появится строго по центру */
+        .btn-yes { display: none; margin-bottom: 20px; z-index: 998; }
+        .btn-yes:active { background: #ffe6f2; }
+        
+        /* Кнопка "Нет" изначально по центру */
+        .btn-no { position: absolute; z-index: 999; }
+
+        canvas { display: none; }
+        
+        /* Розовый финальный текст */
+        .text { margin-top: 30px; font-size: 24px; color: #ff66b2; font-weight: bold; opacity: 0; transition: opacity 1.5s ease; display: none; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div class="box" id="quiz">
+        <h1>Ты меня любишь?</h1>
+        <div class="btn-zone">
+            <!-- Кнопка "Да" встанет строго под текстом по центру, "Нет" улетит -->
+            <button class="btn btn-yes" id="yesBtn">Да</button>
+            <button class="btn btn-no" id="noBtn">Нет</button>
+        </div>
+    </div>
+
+    <canvas id="heartCanvas"></canvas>
+    <div id="loveText" class="text">Я тебя тоже очень люблю! ❤️</div>
+
+    <script>
+        const quiz = document.getElementById('quiz');
+        const yesBtn = document.getElementById('yesBtn');
+        const noBtn = document.getElementById('noBtn');
+        const canvas = document.getElementById('heartCanvas');
+        const ctx = canvas.getContext('2d');
+        const loveText = document.getElementById('loveText');
+
+        let clickCount = 0; // Счетчик нажатий на "Нет"
+
+        function teleportNoButton(e) {
+            if (e) e.preventDefault();
+            
+            clickCount++;
+            const padding = 60;
+            
+            // Вычисляем случайное место для кнопки "Нет" по всему экрану
+            const xNo = Math.random() * (window.innerWidth - noBtn.offsetWidth - padding * 2) + padding;
+            const yNo = Math.random() * (window.innerHeight - noBtn.offsetHeight - padding * 2) + padding;
+            
+            noBtn.style.position = 'fixed'; 
+            noBtn.style.left = `${xNo}px`;
+            noBtn.style.top = `${yNo}px`;
+
+            // Если нажали ровно 3 раза, показываем кнопку "Да" по центру под текстом
+            if (clickCount === 3) {
+                yesBtn.style.display = 'block';
+            }
+        }
+
+        noBtn.addEventListener('click', teleportNoButton);
+
+        yesBtn.addEventListener('click', () => {
+            quiz.style.display = 'none';
+            noBtn.style.display = 'none';
+            yesBtn.style.display = 'none';
+            canvas.style.display = 'block';
+            loveText.style.display = 'block';
+
+            const size = Math.min(window.innerWidth * 0.8, 350);
+            canvas.width = size;
+            canvas.height = size;
+
+            const scale = size / 35; 
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            let t = 0;
+            ctx.strokeStyle = '#ff66b2'; // Розовый цвет линии сердца
+            ctx.lineWidth = 5;
+            ctx.lineCap = 'round';
+
+            function draw() {
+                if (t <= 2 * Math.PI) {
+                    const x = 16 * Math.pow(Math.sin(t), 3);
+                    const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+
+                    const screenX = centerX + x * scale;
+                    const screenY = centerY - y * scale;
+
+                    if (t === 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(screenX, screenY);
+                    } else {
+                        ctx.lineTo(screenX, screenY);
+                        ctx.stroke();
+                    }
+
+                    t += 0.05;
+                    requestAnimationFrame(draw);
+                } else {
+                    loveText.style.opacity = '1';
+                }
+            }
+            draw();
+        });
+    </script>
+</body>
+</html>
